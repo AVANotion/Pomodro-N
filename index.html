@@ -232,6 +232,11 @@
     margin-right: 12px;
   }
 
+  .setting-row input[type="number"],
+  .setting-row input[type="checkbox"] {
+    /* keep default size for checkbox, small field for numbers */
+  }
+
   .setting-row input[type="number"] {
     width: 70px;
     padding: 4px 6px;
@@ -320,6 +325,11 @@
       <label for="cycleInput">Focus sessions before long</label>
       <input type="number" id="cycleInput" min="1" value="3">
     </div>
+    <!-- NEW: sound on/off -->
+    <div class="setting-row">
+      <label for="soundToggle">Sound</label>
+      <input type="checkbox" id="soundToggle" checked>
+    </div>
 
     <button class="save-btn" id="saveSettingsBtn">Save</button>
   </div>
@@ -342,6 +352,9 @@
   let completedFocusCount = 0;
   let focusBeforeLong = 3; // how many focus sessions before long break
 
+  // sound setting
+  let soundEnabled = true;
+
   // real-time based end timestamp (ms) + storage key
   let endTimestamp = null;
   const STORAGE_KEY = "pomodoro_state_v1";
@@ -363,6 +376,7 @@
   const shortInput = document.getElementById("shortInput");
   const longInput = document.getElementById("longInput");
   const cycleInput = document.getElementById("cycleInput");
+  const soundToggle = document.getElementById("soundToggle");
 
   const menuResetBtn = document.getElementById("menuResetBtn");
   const menuSettingsBtn = document.getElementById("menuSettingsBtn");
@@ -406,7 +420,8 @@
       isRunning,
       endTimestamp,
       completedFocusCount,
-      focusBeforeLong
+      focusBeforeLong,
+      soundEnabled
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -438,6 +453,7 @@
 
       completedFocusCount = state.completedFocusCount ?? 0;
       focusBeforeLong = state.focusBeforeLong ?? 3;
+      soundEnabled = state.soundEnabled !== undefined ? !!state.soundEnabled : true;
 
       // bound completedFocusCount just in case
       if (completedFocusCount > focusBeforeLong) {
@@ -451,6 +467,9 @@
 
       updateDisplay();
       renderDots();
+
+      // keep UI toggle in sync
+      soundToggle.checked = soundEnabled;
 
       // if it was running and end time is still in future, resume ticking
       if (isRunning && endTimestamp && endTimestamp > Date.now()) {
@@ -467,6 +486,7 @@
     } catch (e) {
       // corrupted state; ignore
       renderDots();
+      soundToggle.checked = soundEnabled;
     }
   }
 
@@ -497,6 +517,16 @@
     }
   }
 
+  function playBellIfEnabled() {
+    if (!soundEnabled) return;
+    if (!bellSound) return;
+
+    bellSound.currentTime = 0;
+    bellSound.play().catch(() => {
+      // ignore autoplay errors
+    });
+  }
+
   function resumeTimerFromEndTime() {
     clearInterval(timerId);
 
@@ -513,13 +543,8 @@
         endTimestamp = null;
         playPauseBtn.textContent = "▶";
 
-        // Play bell sound when finished
-        if (bellSound) {
-          bellSound.currentTime = 0;
-          bellSound.play().catch(() => {
-            // ignore autoplay errors
-          });
-        }
+        // Play bell sound when finished (if enabled)
+        playBellIfEnabled();
 
         // move to next mode according to logic
         handleSessionComplete();
@@ -623,6 +648,7 @@
     shortInput.value = modes.short;
     longInput.value = modes.long;
     cycleInput.value = focusBeforeLong;
+    soundToggle.checked = soundEnabled;
 
     settingsOverlay.style.display = "flex";
   }
@@ -646,6 +672,8 @@
     if (completedFocusCount > focusBeforeLong) {
       completedFocusCount = focusBeforeLong;
     }
+
+    soundEnabled = !!soundToggle.checked;
 
     if (!isRunning) {
       totalSeconds = modes[currentMode] * 60;
@@ -704,6 +732,3 @@
 
 </body>
 </html>
-
-
-
