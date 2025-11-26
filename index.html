@@ -31,29 +31,11 @@
   width: 320px;
 
   background: #C14C8A;
+
+  /* Responsive padding — 24px → 128px */
+  padding: clamp(24px, 20vw, 128px);
+
   border-radius: 12px;
-
-  /* Default padding: 128px */
-  padding: 128px;
-}
-
-/* If the widget gets smaller (in Notion or embed), reduce padding */
-@media (max-width: 420px) {
-  .widget {
-    padding: 80px;
-  }
-}
-
-@media (max-width: 360px) {
-  .widget {
-    padding: 48px;
-  }
-}
-
-@media (max-width: 300px) {
-  .widget {
-    padding: 24px;
-  }
 }
 
   /* TOP TABS ----------------------------------------------------- */
@@ -609,6 +591,7 @@
 
 </body>
 </html>
+
 
 
 
