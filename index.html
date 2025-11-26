@@ -30,10 +30,30 @@
   text-align: center;
   width: 320px;
 
-  /* NEW: rounded container */
-  background: #C14C8A; /* or solid if you prefer */
-  padding: clamp(16px, 8vw, 64px);
+  background: #C14C8A;
   border-radius: 12px;
+
+  /* Default padding: 128px */
+  padding: 128px;
+}
+
+/* If the widget gets smaller (in Notion or embed), reduce padding */
+@media (max-width: 420px) {
+  .widget {
+    padding: 80px;
+  }
+}
+
+@media (max-width: 360px) {
+  .widget {
+    padding: 48px;
+  }
+}
+
+@media (max-width: 300px) {
+  .widget {
+    padding: 24px;
+  }
 }
 
   /* TOP TABS ----------------------------------------------------- */
@@ -589,6 +609,7 @@
 
 </body>
 </html>
+
 
 
 
