@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,6 +140,15 @@
     font-size: 20px;
   }
 
+  /* ICON IMAGES INSIDE BUTTONS */
+  .icon-button img,
+  .primary-button img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    pointer-events: none; /* so clicks go to the button */
+  }
+
   .icon-button:focus-visible,
   .primary-button:focus-visible {
     outline: 2px solid var(--white);
@@ -218,17 +226,17 @@
   }
 
   .settings-modal {
-  background: #fefefe;
-  color: #7d2057;
-  border-radius: 16px;
+    background: #fefefe;
+    color: #7d2057;
+    border-radius: 16px;
 
-  /* compact padding */
-  padding: 4px 12px;
+    /* compact padding */
+    padding: 4px 12px;
 
-  /* narrower modal */
-  max-width: 240px;
-  width: 100%;
-}
+    /* narrower modal */
+    max-width: 240px;
+    width: 100%;
+  }
 
   .settings-header {
     display: flex;
@@ -315,9 +323,20 @@
 
   <!-- CONTROLS -->
   <div class="controls-row">
-    <button class="icon-button" id="moreBtn" aria-label="More options">⋯</button>
-    <button class="primary-button" id="playPauseBtn" aria-label="Start timer">▶</button>
-    <button class="icon-button" id="nextBtn" aria-label="Next mode">⏭</button>
+    <!-- three dots button with icon -->
+    <button class="icon-button" id="moreBtn" aria-label="More options">
+      <img src="dots.png" alt="More">
+    </button>
+
+    <!-- play/pause button with icon -->
+    <button class="primary-button" id="playPauseBtn" aria-label="Start timer">
+      <img id="playPauseIcon" src="play.png" alt="Play">
+    </button>
+
+    <!-- next button with icon -->
+    <button class="icon-button" id="nextBtn" aria-label="Next mode">
+      <img src="next.png" alt="Next">
+    </button>
   </div>
 </div>
 
@@ -399,6 +418,7 @@
   const minutesEl = document.getElementById("minutes");
   const secondsEl = document.getElementById("seconds");
   const playPauseBtn = document.getElementById("playPauseBtn");
+  const playPauseIcon = document.getElementById("playPauseIcon");
   const moreBtn = document.getElementById("moreBtn");
   const moreOverlay = document.getElementById("moreOverlay");
   const moreMenu = document.getElementById("moreMenu");
@@ -428,6 +448,19 @@
 
     minutesEl.textContent = String(m).padStart(2, "0");
     secondsEl.textContent = String(s).padStart(2, "0");
+  }
+
+  function updatePlayPauseIcon() {
+    if (!playPauseIcon) return;
+    if (isRunning) {
+      playPauseIcon.src = "pause.png";
+      playPauseIcon.alt = "Pause";
+      playPauseBtn.setAttribute("aria-label", "Pause timer");
+    } else {
+      playPauseIcon.src = "play.png";
+      playPauseIcon.alt = "Play";
+      playPauseBtn.setAttribute("aria-label", "Start timer");
+    }
   }
 
   // dots: render based on focusBeforeLong and completedFocusCount
@@ -472,6 +505,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
         renderDots();
+        updatePlayPauseIcon();
         return;
       }
 
@@ -516,14 +550,16 @@
         totalSeconds = 0;
         isRunning = false;
         endTimestamp = null;
-        playPauseBtn.textContent = "▶";
         updateDisplay();
         saveState();
       }
+
+      updatePlayPauseIcon();
     } catch (e) {
       // corrupted state; ignore
       renderDots();
       soundToggle.checked = soundEnabled;
+      updatePlayPauseIcon();
     }
   }
 
@@ -578,7 +614,6 @@
         updateDisplay();
         isRunning = false;
         endTimestamp = null;
-        playPauseBtn.textContent = "▶";
 
         // Play bell sound when finished (if enabled)
         playBellIfEnabled();
@@ -586,6 +621,7 @@
         // move to next mode according to logic
         handleSessionComplete();
         saveState();
+        updatePlayPauseIcon();
         return;
       }
 
@@ -603,7 +639,6 @@
     isRunning = false;
     endTimestamp = null;
     totalSeconds = modes[mode] * 60;
-    playPauseBtn.textContent = "▶";
     updateDisplay();
 
     tabs.forEach(tab => {
@@ -612,6 +647,7 @@
 
     renderDots();
     saveState();
+    updatePlayPauseIcon();
   }
 
   function startTimer() {
@@ -622,11 +658,11 @@
     }
 
     isRunning = true;
-    playPauseBtn.textContent = "⏸";
 
     endTimestamp = Date.now() + totalSeconds * 1000;
 
     saveState();
+    updatePlayPauseIcon();
     resumeTimerFromEndTime();
   }
 
@@ -644,9 +680,9 @@
     clearInterval(timerId);
     isRunning = false;
     endTimestamp = null;
-    playPauseBtn.textContent = "▶";
     updateDisplay();
     saveState();
+    updatePlayPauseIcon();
   }
 
   function resetTimer() {
@@ -654,9 +690,9 @@
     isRunning = false;
     endTimestamp = null;
     totalSeconds = modes[currentMode] * 60;
-    playPauseBtn.textContent = "▶";
     updateDisplay();
     saveState();
+    updatePlayPauseIcon();
   }
 
   // NEXT BUTTON:
@@ -770,14 +806,8 @@
   loadState();
   updateDisplay();
   renderDots();
+  updatePlayPauseIcon();
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
