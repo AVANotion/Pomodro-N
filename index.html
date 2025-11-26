@@ -41,7 +41,7 @@
   .tabs {
     display: inline-flex;
     gap: 8px;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
   }
 
   .tab {
@@ -62,6 +62,26 @@
   .tab:focus-visible {
     outline: 2px solid var(--white);
     outline-offset: 2px;
+  }
+
+  /* CYCLE DOTS --------------------------------------------------- */
+
+  .cycle-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .cycle-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(254, 254, 254, 0.2); /* 20% opacity */
+  }
+
+  .cycle-dot.filled {
+    background: #FEFEFE; /* 100% opacity */
   }
 
   /* TIMER -------------------------------------------------------- */
@@ -249,6 +269,9 @@
     <button class="tab" data-mode="long">Long B</button>
   </div>
 
+  <!-- CYCLE DOTS (progress toward long break) -->
+  <div class="cycle-dots" id="cycleDots"></div>
+
   <!-- TIMER -->
   <div class="timer">
     <div id="minutes" class="time-part">25</div>
@@ -292,10 +315,10 @@
       <label for="longInput">Long break (min)</label>
       <input type="number" id="longInput" min="1" value="15">
     </div>
-    <!-- NEW: how many short breaks before long break -->
+    <!-- NEW: how many focus sessions before long break -->
     <div class="setting-row">
-      <label for="breakCountInput">Short breaks before long</label>
-      <input type="number" id="breakCountInput" min="1" value="3">
+      <label for="cycleInput">Focus sessions before long</label>
+      <input type="number" id="cycleInput" min="1" value="3">
     </div>
 
     <button class="save-btn" id="saveSettingsBtn">Save</button>
@@ -315,9 +338,9 @@
   let timerId = null;
   let isRunning = false;
 
-  // track completed short breaks → long break
-  let shortBreakCounter = 0;
-  let shortBreaksBeforeLong = 3;
+  // track completed focus sessions in this cycle
+  let completedFocusCount = 0;
+  let focusBeforeLong = 3; // how many focus sessions before long break
 
   // real-time based end timestamp (ms) + storage key
   let endTimestamp = null;
@@ -331,6 +354,7 @@
   const moreMenu = document.getElementById("moreMenu");
 
   const tabs = document.querySelectorAll(".tab");
+  const cycleDotsContainer = document.getElementById("cycleDots");
 
   const settingsOverlay = document.getElementById("settingsOverlay");
   const closeSettingsBtn = document.getElementById("closeSettingsBtn");
@@ -338,7 +362,7 @@
   const focusInput = document.getElementById("focusInput");
   const shortInput = document.getElementById("shortInput");
   const longInput = document.getElementById("longInput");
-  const breakCountInput = document.getElementById("breakCountInput");
+  const cycleInput = document.getElementById("cycleInput");
 
   const menuResetBtn = document.getElementById("menuResetBtn");
   const menuSettingsBtn = document.getElementById("menuSettingsBtn");
@@ -355,6 +379,17 @@
     secondsEl.textContent = String(s).padStart(2, "0");
   }
 
+  // dots: render based on focusBeforeLong and completedFocusCount
+  function renderDots() {
+    cycleDotsContainer.innerHTML = "";
+    const count = Math.max(1, focusBeforeLong); // at least 1 dot
+    for (let i = 0; i < count; i++) {
+      const dot = document.createElement("span");
+      dot.className = "cycle-dot" + (i < completedFocusCount ? " filled" : "");
+      cycleDotsContainer.appendChild(dot);
+    }
+  }
+
   // --- PERSISTENCE (localStorage) -----------------------------------
 
   function saveState() {
@@ -364,8 +399,8 @@
       totalSeconds,
       isRunning,
       endTimestamp,
-      shortBreakCounter,
-      shortBreaksBeforeLong
+      completedFocusCount,
+      focusBeforeLong
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -377,7 +412,10 @@
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        renderDots();
+        return;
+      }
 
       const state = JSON.parse(raw);
 
@@ -392,8 +430,13 @@
       isRunning = !!state.isRunning;
       endTimestamp = state.endTimestamp ?? null;
 
-      shortBreakCounter = state.shortBreakCounter ?? 0;
-      shortBreaksBeforeLong = state.shortBreaksBeforeLong ?? 3;
+      completedFocusCount = state.completedFocusCount ?? 0;
+      focusBeforeLong = state.focusBeforeLong ?? 3;
+
+      // bound completedFocusCount just in case
+      if (completedFocusCount > focusBeforeLong) {
+        completedFocusCount = focusBeforeLong;
+      }
 
       // update active tab
       tabs.forEach(tab => {
@@ -401,6 +444,7 @@
       });
 
       updateDisplay();
+      renderDots();
 
       // if it was running and end time is still in future, resume ticking
       if (isRunning && endTimestamp && endTimestamp > Date.now()) {
@@ -416,6 +460,7 @@
       }
     } catch (e) {
       // corrupted state; ignore
+      renderDots();
     }
   }
 
@@ -424,24 +469,25 @@
   // decides what to do when a session finishes
   function handleSessionComplete() {
     if (currentMode === "focus") {
-      // focus finished → choose which break to take based on how many short breaks are done
-      if (shortBreakCounter >= shortBreaksBeforeLong) {
-        // we've already done enough short breaks → take a long break, reset counter
-        shortBreakCounter = 0;
+      // a focus session fully completed
+      completedFocusCount++;
+      if (completedFocusCount >= focusBeforeLong) {
+        // reached target → long break, reset counter
+        completedFocusCount = 0;
         setMode("long");
         startTimer(); // auto-start long break
       } else {
-        // still haven't reached the target → short break
+        // still building up → short break
         setMode("short");
         startTimer(); // auto-start short break
       }
+      renderDots();
     } else if (currentMode === "short") {
-      // short break finished → count it, then go to focus (do not auto-start)
-      shortBreakCounter++;
+      // short break finished → go back to focus, do not auto-start
       setMode("focus");
-      // user must press play to start focus
+      // user manually starts focus
     } else if (currentMode === "long") {
-      // long break finished → back to focus, do not auto-start
+      // long break finished → go back to focus, do not auto-start
       setMode("focus");
     }
   }
@@ -545,24 +591,23 @@
     saveState();
   }
 
-  // NEXT BUTTON: same logic as auto-advance, but NO auto-start
+  // NEXT BUTTON:
+  // same decisions as auto-advance, but does NOT auto-start next mode
   function goToNextMode() {
     if (currentMode === "focus") {
-      // manually skip a focus → go to the same break type logic, but don't start it
-      if (shortBreakCounter >= shortBreaksBeforeLong) {
-        shortBreakCounter = 0;
+      // treat as if focus session finished, but don't start break
+      completedFocusCount++;
+      if (completedFocusCount >= focusBeforeLong) {
+        completedFocusCount = 0;
         setMode("long");
       } else {
         setMode("short");
       }
-    } else if (currentMode === "short") {
-      // manually skip a short break → count it as done, go to focus
-      shortBreakCounter++;
-      setMode("focus");
-    } else if (currentMode === "long") {
-      // manually skip long → back to focus
+      renderDots();
+    } else if (currentMode === "short" || currentMode === "long") {
       setMode("focus");
     }
+    saveState();
   }
 
   // --- SETTINGS ----------------------------------------------------
@@ -571,7 +616,7 @@
     focusInput.value = modes.focus;
     shortInput.value = modes.short;
     longInput.value = modes.long;
-    breakCountInput.value = shortBreaksBeforeLong;
+    cycleInput.value = focusBeforeLong;
 
     settingsOverlay.style.display = "flex";
   }
@@ -584,18 +629,24 @@
     const f = parseInt(focusInput.value, 10);
     const s = parseInt(shortInput.value, 10);
     const l = parseInt(longInput.value, 10);
-    const bc = parseInt(breakCountInput.value, 10);
+    const c = parseInt(cycleInput.value, 10);
 
     if (f > 0) modes.focus = f;
     if (s > 0) modes.short = s;
     if (l > 0) modes.long = l;
-    if (bc > 0) shortBreaksBeforeLong = bc;
+    if (c > 0) focusBeforeLong = c;
+
+    // keep completedFocusCount within range
+    if (completedFocusCount > focusBeforeLong) {
+      completedFocusCount = focusBeforeLong;
+    }
 
     if (!isRunning) {
       totalSeconds = modes[currentMode] * 60;
       updateDisplay();
     }
 
+    renderDots();
     saveState();
     closeSettings();
   }
@@ -642,6 +693,7 @@
   // initial load
   loadState();
   updateDisplay();
+  renderDots();
 </script>
 
 </body>
