@@ -156,23 +156,22 @@
   /* MORE MENU ---------------------------------------------------- */
 
   .more-menu {
-    position: absolute;
-    bottom: calc(100% + 8px); /* open UP above the 3-dots button */
-    left: 50%;
-    transform: translateX(-50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* center horizontally + vertically */
 
-    background: #fefefe;
-    border: 1px solid #e0e0e0;
-    padding: 8px;
-    border-radius: 12px;
-    display: none;
-    flex-direction: column;
-    gap: 4px;
+  background: #fefefe;
+  border: 1px solid #e0e0e0;
+  padding: 12px;
+  border-radius: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  backdrop-filter: none;
+  z-index: 999; /* make sure it's on top */
+}
 
-    backdrop-filter: none;
-    min-width: 160px;
-    z-index: 5;
-  }
 
   /* BRAND ROW INSIDE MENU ---------------------------------------- */
 
@@ -325,7 +324,7 @@
       <!-- 3 DOTS POPUP -->
       <div class="more-menu" id="moreMenu">
         <div class="menu-brand">
-          <img src="YOUR_LOGO_URL_HERE" alt="OrganizedQuinn logo">
+          <img src="logo.PNG" alt="OrganizedQuinn logo">
           <span>OrganizedQuinn</span>
         </div>
         <button id="menuResetBtn">Reset</button>
@@ -773,3 +772,4 @@
 
 </body>
 </html>
+
