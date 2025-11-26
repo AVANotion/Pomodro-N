@@ -62,16 +62,23 @@
   /* TIMER -------------------------------------------------------- */
 
   .timer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-weight: 800;
-    line-height: 0.9;
-  }
+  display: flex;
+  flex-direction: row;       /* horizontal layout */
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  line-height: 1;
+}
 
-  .time-part {
-    font-size: 80px;
-  }
+.time-part {
+  font-size: 80px;
+}
+
+/* add colon between minutes and seconds */
+#minutes::after {
+  content: ":";
+  margin: 0 4px;            /* space between 25 and 00 */
+}
 
   /* CONTROLS ----------------------------------------------------- */
 
@@ -572,3 +579,4 @@
 
 </body>
 </html>
+
