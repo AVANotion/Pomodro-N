@@ -124,18 +124,20 @@
   /* MORE MENU ---------------------------------------------------- */
 
   .more-menu {
-    position: absolute;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-120px);
-    background: rgba(0, 0, 0, 0.12);
-    padding: 8px;
-    border-radius: 12px;
-    backdrop-filter: blur(6px);
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-  }
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-120px);
+  background: #00000022;   /* soft solid background */
+  padding: 8px;
+  border-radius: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+
+  /* remove blur */
+  backdrop-filter: none;
+}
 
   .more-menu button {
     border: none;
@@ -579,4 +581,5 @@
 
 </body>
 </html>
+
 
