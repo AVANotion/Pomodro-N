@@ -62,23 +62,16 @@
   /* TIMER -------------------------------------------------------- */
 
   .timer {
-  display: flex;
-  flex-direction: row;       /* horizontal */
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  line-height: 1;
-}
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 800;
+    line-height: 0.9;
+  }
 
-.time-inline {
-  font-size: 80px;
-}
-
-.colon {
-  font-size: 80px;
-  margin: 0 4px;             /* optional spacing */
-}
-
+  .time-part {
+    font-size: 80px;
+  }
 
   /* CONTROLS ----------------------------------------------------- */
 
@@ -241,11 +234,9 @@
 
   <!-- TIMER -->
   <div class="timer">
-  <span id="minutes" class="time-inline">25</span>
-  <span class="colon">:</span>
-  <span id="seconds" class="time-inline">00</span>
-</div>
-
+    <div id="minutes" class="time-part">25</div>
+    <div id="seconds" class="time-part">00</div>
+  </div>
 
   <!-- CONTROLS -->
   <div class="controls-row">
