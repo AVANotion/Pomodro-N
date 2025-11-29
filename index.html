@@ -235,8 +235,10 @@
     padding: 4px 12px;
 
     /* narrower modal */
-    height: 100%;
     width: 100%;
+  max-width: 400px;        /* optional, so it's not super wide */
+  max-height: 100%;        /* don't grow beyond viewport */
+  overflow-y: auto;
   }
 
   .settings-header {
@@ -812,6 +814,7 @@
 
 </body>
 </html>
+
 
 
 
